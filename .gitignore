@@ -1,0 +1,18 @@
+# Entorno virtual
+.venv/
+
+# Firebase credentials
+serviceAccountKey.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# VS Code
+.vscode/
+
+# Seed files
+seed_data.json
+seed_firestore.py
