@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from app.users.models import User, UserUpdate
+from app.firebase_config import db
 from app.users import service
 
 router = APIRouter(prefix="/users", tags=["Users"])
