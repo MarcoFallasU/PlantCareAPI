@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.firebase_config import db
 from app.models import User, Plant
+from datetime import date
 
 router = APIRouter()
 
@@ -28,7 +29,65 @@ async def update_user(user_id: str, user: User):
 async def delete_user(user_id: str):
     db.collection("users").document(user_id).delete()
     return {"message": f"Usuario {user_id} eliminado"}
-    
+
+
+@router.post("/users/{user_id}/check-streak")
+async def check_streak(user_id: str):
+
+    doc = db.collection("users").document(user_id).get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    data          = doc.to_dict()
+    racha_actual  = data.get("racha", 0)
+    last_date_str = data.get("lastWateredDate")
+    today         = date.today()
+
+    if not last_date_str:
+        return {"racha": racha_actual, "lastWateredDate": last_date_str}
+
+    last_date = date.fromisoformat(last_date_str)
+    days_diff  = (today - last_date).days
+
+    if days_diff > 1:
+        db.collection("users").document(user_id).update({
+            "racha": 0,
+        })
+        return {"racha": 0, "lastWateredDate": last_date_str}
+
+    return {"racha": racha_actual, "lastWateredDate": last_date_str}
+
+
+@router.post("/users/{user_id}/water")
+async def register_watering(user_id: str):
+    """
+    Se llama cada vez que el usuario riega una planta.
+    Si es la primera vez que riega hoy, suma +1 a la racha.
+    Si ya regó hoy, no hace nada.
+    Devuelve la racha actualizada y si fue incrementada.
+    """
+    doc = db.collection("users").document(user_id).get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    data          = doc.to_dict()
+    racha_actual  = data.get("racha", 0)
+    last_date_str = data.get("lastWateredDate")
+    today         = date.today()
+    today_str     = today.isoformat()
+
+    if last_date_str == today_str:
+        return {"racha": racha_actual, "incremented": False}
+
+    nueva_racha = racha_actual + 1
+    db.collection("users").document(user_id).update({
+        "racha":           nueva_racha,
+        "lastWateredDate": today_str,
+    })
+
+    return {"racha": nueva_racha, "incremented": True}
+
+
 @router.get("/plants")
 async def get_plants(userId: str):
     docs = db.collection("plants").where("userId", "==", userId).stream()

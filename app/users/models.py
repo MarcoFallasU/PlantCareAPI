@@ -16,6 +16,7 @@ class User(BaseModel):
     privacidad: Optional[str] = "Público"
     categoriasPlantas: Optional[List[str]] = []
     createdAt: Optional[str] = None
+    lastWateredDate: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
