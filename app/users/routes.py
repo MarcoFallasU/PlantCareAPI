@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from app.users.models import User, UserUpdate
-from app.firebase_config import db
 from app.users import service
+from app.firebase_config import db  
+from datetime import date
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
